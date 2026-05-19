@@ -6,6 +6,7 @@ app = FastAPI()
 class ChatRequest(BaseModel):
     message: str
 
+#Retrieves the 
 @app.get("/")
 def home():
     return {"status": "EchoFrog Backend online"
@@ -19,3 +20,10 @@ def chat(request: ChatRequest):
     "expression" : "neutral"
 
 }
+
+@app.get("/health")
+def healthcheck():
+    return{
+        "status": "ok",
+        "service": "EchoFrog Backend"
+    }
