@@ -4,7 +4,7 @@ from fastapi import FastAPI
 # Import BaseModel for validating incoming request data
 from pydantic import BaseModel
 #Imports a generated response to user
-from ai_service import generate_response
+from backend.ai_service import generate_response
 
 
 # Create the FastAPI application/server
@@ -35,14 +35,13 @@ def chat(request: ChatRequest):
 
     # Extract message from incoming request
     user_message = request.message
-    generate_response(user_message)
-    ai_reply = generate_response(user_message)
+    ai_reply = generate_response(request.message)
 
     # Return chatbot response
     return {
         "reply_text": f"Ribbit...you said: {user_message}",
         # Future expression system for frog emotions
-        "expression": "neutral",
+        "expression": request.message,
         "reply text": ai_reply
         
     }

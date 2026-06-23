@@ -1,0 +1,10 @@
+#Environment variables 
+Echo-sec.env
+*.Echo-sec.env
+
+#Python virtual environment
+.venv/
+
+#PythonCache
+__pycache__/
+*.pyc
