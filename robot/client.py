@@ -40,14 +40,3 @@ except requests.exceptions.RequestException as error:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
