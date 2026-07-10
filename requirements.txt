@@ -1,0 +1,6 @@
+
+#The packages this project requires:
+fastapi[standard]
+openai
+python-dotenv
+requests

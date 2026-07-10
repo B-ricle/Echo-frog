@@ -1,10 +1,19 @@
-#Environment variables 
+# Environment variables and secrets
 Echo-sec.env
 *.Echo-sec.env
+.env
+.env.*
+!.env.example
 
-#Python virtual environment
+# Python virtual environment
 .venv/
 
-#PythonCache
+# Python bytecode and caches
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Testing, linting, and coverage
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
