@@ -2,30 +2,39 @@
 from fastapi import FastAPI
 
 # Import BaseModel for validating incoming request data
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, StringConstraints
 #Imports a generated response to user
 from backend.ai_service import generate_response
+
+from typing import Annotated
+# Literal means "only these exact values are accepted"
+from typing import Literal
 
 
 # Create the FastAPI application/server
 app = FastAPI()
 
- 
+
+ChatMessage = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace= True,
+        min_length= 1,
+        max_length=4000,
+
+    ),
+]
+
+
 
 # Define the expected structure of incoming chat requests
 # The request must contain a message string
 class ChatRequest(BaseModel):
-    message: str
-    @field_validator("message")
-    @classmethod
-    def validate_message(cls, message: str) -> str:
-        cleaned_message = message.strip()
-        if not cleaned_message:
-            raise ValueError("The message cannot be empty.")
-        if len(cleaned_message) > 4000:
-            raise ValueError("Message cannot exceed 4,000 characters.")
-        return cleaned_message
+    message: ChatMessage
             
+class ChatResponse(BaseModel):
+    reply: str
+    expression: Literal["neutral"] = "neutral"
 
 
 # Root route
@@ -37,8 +46,13 @@ def home():
     return {
         "status": "EchoFrog Backend online"
     }
-
-
+# health check 
+@app.get("/health")
+def health():
+    return{
+        "status": "healthy"
+    }
+    
 # Chat endpoint
 # Receives user messages from robot or website
 @app.post("/chat")
@@ -46,14 +60,11 @@ async def chat(request: ChatRequest):
 
     # Extract message from incoming request
     user_message = request.message
-    ai_reply = await generate_response(request.message)
+    ChatRequest =  await generate_response(request.message)
 
     # Return chatbot response
     return {
-        # Future expression system for frog emotions
-        "expression": request.message,
-        "reply text": ai_reply
-        
+        ChatResponse   
     }
     
 
