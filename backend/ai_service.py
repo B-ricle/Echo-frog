@@ -3,16 +3,17 @@ from pathlib import Path
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
-ENV_PATH = BASE_DIR / ".env"
+ENV_PATH = BASE_DIR / "Echo-sec.env"
 
 load_dotenv(ENV_PATH)
 
 # pulls the key from the env
 api_key = os.getenv("OPENAI_API_KEY")
 
-# Configures openai model and runs the gpt 5.4 mini model as back up
-MODEL = os.getenv("OPENAI_MODEL" , "gpt-5.4-mini")
+# Configures openai model 
+MODEL = os.getenv("OPENAI_MODEL")
 
 # Ensures that the key is found
 if api_key is None:
@@ -31,6 +32,9 @@ ECHO_FROG_INSTRUCTIONS=("""You are Echo Frog, a friendly coding assistant and pr
             If you are uncertain, say so rather than inventing information.
             Do not claim to have performed physical actions."""
         )
+
+#TODO: real expression once there is a source for it
+
 
 
 
