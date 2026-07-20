@@ -1,5 +1,6 @@
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, StringConstraints, Field 
 from typing import Annotated, Literal
+
 
 ChatMessage = Annotated[
     str,
@@ -11,11 +12,16 @@ ChatMessage = Annotated[
     ),
 ]
 
+
 # Define the expected structure of incoming chat requests
 # The request must contain a message string
 class ChatRequest(BaseModel):
     message: ChatMessage
-            
+    user_id: str | None = None
+
+
+
+         
 class ChatResponse(BaseModel):
     reply: str
     expression: Literal["neutral"] = "neutral"
