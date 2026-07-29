@@ -1,36 +1,98 @@
 import docker
+from docker.errors import NotFound, APIError
+import tarfile
+import io
+import threading
+
+class tarfileuploadTimeout(Exception):
+    #Raised when the file upload takes too long to transfer the payload to the sandbox
+    pass
+class SandboxExecutionTimeout(Exception):
+    #Raised when the user's code runs past its allowed time limit
+    pass
+
+
 
 #connect to the local docker daemon
 client = docker.from_env()
 
-container = client.containers.run(
-    "python:3.13.5",
-    stdin_open=True, #keeps the STDIN open so that it is ready to recieve the user's input via string
-    command="python -", #This allows the input to be read
-    detach= True )
+def run_code(code_to_run: str):
 
-#Socket needs to gather live data so it leave stream as true so that the TCP/Unix domain socket can handle and deliver
-socket = container.attach_socket(params={"stdin": True, "stream": True })
-print(dir(socket))
+    local_container = client.containers.run(
+        "python:3.13.5",
+        command=["tail", "-f", "/dev/null"], 
+        detach=True
+    )
+    local_bytes = code_to_run.encode("utf-8")#Turns into bytes
+    watchdog = None
+    max_execution_time = 5.0
 
-users_code = "print('Hello from the Sandbox! ')"
-#Turns the string into a bytes
-socket.send(users_code.encode("utf-8"))
+    #Used the same error exception as in the finally statment due possibility that the kill() statement acts first/ Race Condition
+    def timeout_handler():
+        try:
+            print("Timeout triggered. Killing container.")
+            local_container.kill()
+        except NotFound as e:
+            print(f"Error: The requested resources was not found. Details: {e.explanation}")
+        except APIError as e:
+            print(f"A different docker API error occured: {e}")   
+         
+         
+    local_tar_stream = io.BytesIO()
+    try:
+        with tarfile.open(fileobj= local_tar_stream, mode='w') as local_tar:
 
-#closed socket meaning no more input
-socket.close()
+            tar_info = tarfile.TarInfo(name = "user_submission.txt")
+            # Write the bytes into the tar_archive
+            tar_info.size = len(local_bytes)# The size of the local tar file for the given submission
+            local_tar.addfile(tar_info, io.BytesIO(local_bytes))
+
+            # Starts from the beginning of the stream 
+        local_tar_stream.seek(0)
+        local_container.put_archive("/tmp", local_tar_stream)
+
+
+        watchdog = threading.Timer(max_execution_time, timeout_handler )
+        watchdog.start()
+
+        print("Executing code inside sandbox...")
+        result = local_container.exec_run(["python" , "/tmp/user_submission.txt"])
+
+
+        local_container_info = client.api.inspect_container(local_container.id)
+        if not local_container_info['State']['Running'] and local_container_info['State']['ExitCode'] == 137:
+           
+            raise SandboxExecutionTimeout("Execution exceeded the allowed time limit")
+
+        return result
+    
+    finally:
+        if watchdog is not None:
+            watchdog.cancel()
+        #prevents the buildup of containers
+        try:
+            local_container.remove(force=True)
+            print("container was successfully removed.")
+        except NotFound as e:
+            print(f"Error: The requested resources was not found. Details: {e.explanation}")
+        except APIError as e:
+            print(f"A different docker API error occured: {e}")
+        
+user_input = input("Enter submission: ")
 try:
-    container.wait(timeout=10)
-except Exception as e:
-    print(f"Wait failed or timed out: {e} ")
+    result = run_code(user_input)
+    print(result.exit_code)
+    print(result.output.decode("utf-8"))
+except SandboxExecutionTimeout as e:
+    print("Execution Failed")
+    print(e)
 
-#prints the output of the bytes of the input into a string 
-output = container.logs().decode("utf-8")
+        
 
-print(output)
-#prevents build up of containers
-container.remove(force=True)
+        
+    
 
 
+    
 
 
