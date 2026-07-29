@@ -20,7 +20,9 @@ def run_code(code_to_run: str):
 
     local_container = client.containers.run(
         "python:3.13.5",
-        command=["tail", "-f", "/dev/null"], 
+        mem_limit="256m",
+        command=["tail", "-f", "/dev/null"],
+        nano_cpus=int(5e8),
         detach=True
     )
     local_bytes = code_to_run.encode("utf-8")#Turns into bytes
