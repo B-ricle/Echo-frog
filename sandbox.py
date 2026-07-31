@@ -4,14 +4,10 @@ import tarfile
 import io
 import threading
 
-class tarfileuploadTimeout(Exception):
-    #Raised when the file upload takes too long to transfer the payload to the sandbox
-    pass
+
 class SandboxExecutionTimeout(Exception):
     #Raised when the user's code runs past its allowed time limit
     pass
-
-
 
 #connect to the local docker daemon
 client = docker.from_env()
@@ -23,7 +19,9 @@ def run_code(code_to_run: str):
         mem_limit="256m",
         command=["tail", "-f", "/dev/null"],
         nano_cpus=int(5e8),
-        detach=True
+        detach=True,
+        network_disabled=True
+        
     )
     local_bytes = code_to_run.encode("utf-8")#Turns into bytes
     watchdog = None
@@ -79,10 +77,24 @@ def run_code(code_to_run: str):
             print(f"Error: The requested resources was not found. Details: {e.explanation}")
         except APIError as e:
             print(f"A different docker API error occured: {e}")
-        
-user_input = input("Enter submission: ")
+
+ #Creates multilined structure
+multi_line = []
+
+while True:
+    user_input = input("Enter Submission (or type 'Submit'): ").strip()
+
+    if user_input == "Submit":
+        break
+
+    multi_line.append(user_input)
+
+final_statement = "\n".join(multi_line)
+print(f"final submission: {final_statement} ")
+
+
 try:
-    result = run_code(user_input)
+    result = run_code(final_statement)
     print(result.exit_code)
     print(result.output.decode("utf-8"))
 except SandboxExecutionTimeout as e:
