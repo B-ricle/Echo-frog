@@ -15,7 +15,9 @@ involved to help these are alot of implementations one that i never really thoug
 from fastapi import FastAPI,HTTPException,status
 #Imports a generated response to user
 from backend.ai_service import generate_response
-from backend.models import ChatRequest, ChatResponse
+from backend.models import ChatRequest, ChatResponse, SubmissionRequest
+from backend.sandbox import run_code, SandboxExecutionTimeout
+from backend.expected_outputs import problems
 
 
 
@@ -38,15 +40,42 @@ def health():
         "status": "healthy"
     }
 
+@app.post("/submit")
+def submission(request: SubmissionRequest):
+  
+    if request.user_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
+                            detail="Missing/Incorrect authentication credentials")  
+    user_code = request.code
+
+    problemId = request.problem_id
+
+    if problemId not in problems:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    
+    try:
+        submission= run_code(code_to_run= user_code)
+        decoded_submission = submission.output.decode("utf-8")
+        is_correct = decoded_submission.strip() == problems[problemId]["expected"]
+        return{
+            "output": decoded_submission,
+            "correct": is_correct,
+            "exit_code": submission.exit_code
+        }
+    except SandboxExecutionTimeout as e:
+        return{
+            "timeout": f"Runtime Error in Sandbox {e}"
+        }
+
     
 # Chat endpoint
 # Receives user messages from robot or website
 @app.post("/chat")
 async def chat(request: ChatRequest):
      
-     if request.user_id == None:
+     if request.user_id is None:
          raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
-                             detail="Missing/Inncorrect authentication credentials")
+                             detail="Missing/Incorrect authentication credentials")
 
 
     # Extract message from incoming request

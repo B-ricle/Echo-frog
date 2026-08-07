@@ -1,4 +1,4 @@
-from pydantic import BaseModel, StringConstraints, Field 
+from pydantic import BaseModel, StringConstraints
 from typing import Annotated, Literal
 
 
@@ -18,6 +18,11 @@ ChatMessage = Annotated[
 class ChatRequest(BaseModel):
     message: ChatMessage
     user_id: str | None = None
+
+class SubmissionRequest(BaseModel):
+    user_id: str | None = None
+    code: str
+    problem_id: str
 
 
 
