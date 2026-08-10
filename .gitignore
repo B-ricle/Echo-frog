@@ -17,5 +17,6 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
-sandbox-v1-outline.md
-DECISIONS.md
+**/sandbox-v1-outline.md
+**/DECISIONS.md
+**/echo-frog-schema.md
