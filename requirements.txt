@@ -4,3 +4,4 @@ fastapi[standard]
 openai
 python-dotenv
 requests
+psycopg[binary]

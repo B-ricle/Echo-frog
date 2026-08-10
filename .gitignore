@@ -1,6 +1,8 @@
 # Environment variables and secrets
+Echodatabase.env
 Echo-sec.env
 *.Echo-sec.env
+*.env
 .env
 .env.*
 !.env.example
