@@ -7,8 +7,10 @@ SEND_USER_ID: Final = True
 #Create user the users message
 
 user_id = str(uuid.uuid4())
+user_input = int(input("Problem ID number: "))
 solution_code= """
-while True: pass
+
+
 class Solution:
     def search(self, nums: list[int], target: int) -> int:
         left = 1
@@ -45,7 +47,7 @@ print(the_array)
 payload = {
     "user_id": "test123",
     "code": solution_code,
-    "problem_id": "hard"
+    "problem_id": user_input
 }
 
 

@@ -22,11 +22,8 @@ class ChatRequest(BaseModel):
 class SubmissionRequest(BaseModel):
     user_id: str | None = None
     code: str
-    problem_id: str
-
-
-
-         
+    problem_id: int
+        
 class ChatResponse(BaseModel):
     reply: str
     expression: Literal["neutral"] = "neutral"

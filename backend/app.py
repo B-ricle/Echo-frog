@@ -17,7 +17,8 @@ from fastapi import FastAPI,HTTPException,status
 from backend.ai_service import generate_response
 from backend.models import ChatRequest, ChatResponse, SubmissionRequest
 from backend.sandbox import run_code, SandboxExecutionTimeout
-from backend.expected_outputs import problems
+from backend.database import get_connection
+
 
 
 
@@ -47,25 +48,61 @@ def submission(request: SubmissionRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
                             detail="Missing/Incorrect authentication credentials")  
     user_code = request.code
-
     problemId = request.problem_id
 
-    if problemId not in problems:
+    with get_connection() as connect:
+        with connect.cursor() as cursor:
+            cursor.execute("SELECT expected_output FROM problems WHERE id=%s" , (problemId,))
+
+            result= cursor.fetchone()
+
+    if result is None:
         raise HTTPException(status_code=404, detail="Problem not found")
-    
+
+    expected_output = result[0]
+
     try:
         submission= run_code(code_to_run= user_code)
-        decoded_submission = submission.output.decode("utf-8")
-        is_correct = decoded_submission.strip() == problems[problemId]["expected"]
-        return{
-            "output": decoded_submission,
-            "correct": is_correct,
-            "exit_code": submission.exit_code
-        }
-    except SandboxExecutionTimeout as e:
-        return{
-            "timeout": f"Runtime Error in Sandbox {e}"
-        }
+
+        is_correct = submission.output.strip() == expected_output.strip()
+
+        if submission.exit_code != 0:
+            outcome = 'runtime_error'
+        elif is_correct:
+            outcome = 'passed'
+        else:
+            outcome = 'wrong_answer'
+
+        exit_code = submission.exit_code
+        submission_duration = submission.duration_exec
+        output = submission.output
+
+    except SandboxExecutionTimeout:
+        outcome = 'timeout'
+        exit_code = None 
+        submission_duration = 5.0
+        output = ''
+        is_correct = False
+
+    with get_connection() as connect:
+        with connect.cursor() as cursor:
+
+            cursor.execute(
+            """
+            INSERT INTO attempts(student_id, problem_id, code, outcome, exit_code, duration) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """, 
+            (request.user_id, problemId, user_code, outcome, exit_code, submission_duration)
+            )
+            connect.commit()
+            
+    return {
+        "outcome": outcome,
+        "exit_code": exit_code,
+        "duration": submission_duration,
+        "output": output,
+        "is_correct": is_correct
+    }
 
     
 # Chat endpoint
