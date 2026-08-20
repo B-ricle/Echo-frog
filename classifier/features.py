@@ -1,5 +1,5 @@
 from backend.database import get_connection
-
+from classifier.synthetic_data import GROUND_TRUTH
 
 def feature_computation(student_id):
     with get_connection() as conn:
@@ -36,6 +36,31 @@ def build_all_features():
 
     return rows
 
-print(build_all_features())        
+def truth_building():
+    built_student_features = build_all_features()
+    label = []
+    for(student_id, topic, avg_attempts, ) in built_student_features:
+        student_label = GROUND_TRUTH[(student_id, topic)]
+        label.append((student_id, topic, avg_attempts, student_label))
+        
+    return label
+
+def build_training_data():
+    training_data_truth_value = truth_building()
+    # x is avg_attempts
+    training_data_x = []
+    # y is truth label ex. True/False
+    training_data_y = []
+
+    for(student_id, topic, avg_attempts, student_label) in training_data_truth_value:
+        training_data_x.append([float(avg_attempts)])
+        training_data_y.append(student_label)
+
+    return training_data_x, training_data_y
+    
+print(build_training_data())
+
+
+            
 
 

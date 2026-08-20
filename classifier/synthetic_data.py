@@ -96,6 +96,28 @@ PROFILES = {
     }
 
 }
+GROUND_TRUTH = {
+    ("synthetic_student_a", "binary_search"): False,
+    ("synthetic_student_a", "recursion"): True,
+    ("synthetic_student_a", "hash_map"): False,
+
+    ("synthetic_student_b", "binary_search"): False,
+    ("synthetic_student_b", "recursion"): False,
+    ("synthetic_student_b", "hash_map"): True,
+
+    ("synthetic_student_c", "binary_search"): False,
+    ("synthetic_student_c", "recursion"): False,
+    ("synthetic_student_c", "hash_map"): False,
+
+    ("synthetic_student_d", "binary_search"): False,
+    ("synthetic_student_d", "recursion"): False,
+    ("synthetic_student_d", "hash_map"): False,
+
+    ("synthetic_student_e", "binary_search"): True,
+    ("synthetic_student_e", "recursion"): True,
+    ("synthetic_student_e", "hash_map"): True,
+
+}
 
 def caller() -> dict:
     with get_connection() as conn:
@@ -178,14 +200,4 @@ def insert_all_attempts(rows):
                 """,
                 rows)
 
-insert_all_attempts(build_all_attempts())
-
-
-test_profile = {
-    "attempts_range": (5,7),
-    "duration_range": (0.5, 1.0),
-    "Failure_outcome": ["wrong_answer", "runtime_error", "timeout"]
-}
-
-print(generate_attempts_for("synthetic_a", "recursion", 7, test_profile, datetime.now() - timedelta(days= 7)))
 
