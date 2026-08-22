@@ -1,5 +1,36 @@
 from backend.database import get_connection
 from classifier.synthetic_data import GROUND_TRUTH
+import joblib
+
+
+def predict_weakness(student_id, topic):
+    model = joblib.load('classifier/model.joblib')
+
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT topic, AVG(attempt_count) AS avg_attempts
+                FROM (
+                    SELECT p.topic, a.problem_id, COUNT(*) AS attempt_count
+                    FROM attempts a
+                    JOIN problems p ON a.problem_id = p.id
+                    WHERE a.student_id = %s AND p.topic = %s
+                    GROUP BY p.topic, a.problem_id
+                ) AS problem_counts
+                GROUP BY topic;
+                """,
+                (student_id, topic,)
+            )
+
+            result = cursor.fetchone()
+    avg_attempts = float(result[1])
+    student_prediction= model.predict([[avg_attempts]])
+
+    return student_prediction
+
+print(predict_weakness('synthetic_student_a', 'binary_search'))
 
 def feature_computation(student_id):
     with get_connection() as conn:
@@ -58,7 +89,7 @@ def build_training_data():
 
     return training_data_x, training_data_y
     
-print(build_training_data())
+
 
 
             
