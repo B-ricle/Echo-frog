@@ -10,9 +10,19 @@ CREATE TABLE problems(
 
 ALTER TABLE problems ADD CONSTRAINT no_dupes UNIQUE (description);
 
+
+CREATE TABLE students(
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE, 
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE 
+
 CREATE TABLE attempts(
     id SERIAL PRIMARY KEY,
-    student_id TEXT NOT NULL,
+    student_id INTEGER NOT NULL REFERENCES students(id),
     problem_id INTEGER NOT NULL REFERENCES problems(id),
     code TEXT NOT NULL,
     outcome TEXT NOT NULL CHECK (outcome IN ('passed', 'wrong_answer', 'runtime_error', 'timeout')),
@@ -20,6 +30,8 @@ CREATE TABLE attempts(
     duration NUMERIC NOT NULL, 
     created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
+
+
  
 INSERT INTO problems (difficulty_level, description, sample_input, expected_output, topic, created_at)
 VALUES 

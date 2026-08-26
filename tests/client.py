@@ -1,12 +1,7 @@
 import requests
-import uuid 
-from typing import Final
-
-SEND_USER_ID: Final = True
  
 #Create user the users message
 
-user_id = str(uuid.uuid4())
 user_input = int(input("Problem ID number: "))
 solution_code= """
 
@@ -45,14 +40,11 @@ print(the_array)
  #preparing the data/json's body 
 
 payload = {
-    "user_id": "test123",
     "code": solution_code,
     "problem_id": user_input
 }
 
 
-if SEND_USER_ID:
-    payload["user_id"] = str(uuid.uuid4())
 
 try:
     #making the request to the backend server or app.py url
@@ -71,7 +63,7 @@ try:
 
         try:    
             output = data['output']
-            correct = data['correct']
+            correct = data['is_correct']
             exit_code= data['exit_code']
             print(f"Server received : {output, correct, exit_code}")
         except KeyError as e:

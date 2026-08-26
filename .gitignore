@@ -1,6 +1,7 @@
 # Environment variables and secrets
 Echodatabase.env
 Echo-sec.env
+Jwt_auth.env
 *.Echo-sec.env
 *.env
 .env
